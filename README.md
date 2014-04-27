@@ -68,14 +68,15 @@ Most of this example code is based off of the Express framework, but it can be e
 ### IPN (Completing the order automatically)
 
     exports.ipn = function (req, res) {
-    
+        //Perform validation
         paypal.validateIPN(req.body, function (err, verified){
             if (verified === true){ // This ensures that the IPN message came from PayPal and not a fraudster
             
-            if (req.body.payment_status === 'Completed') { //Order is completed
-                if (req.body.receiver_email === <config.paypalAccountEmail>){ //Make sure who the money was sent to is you
-                    //Lookup invoice via req.body.invoice and complete the order.
-                    //You should also probably check the mc_gross and mc_currency to ensure that you received the right amount of money
+                if (req.body.payment_status === 'Completed') { //Order is completed
+                    if (req.body.receiver_email === <config.paypalAccountEmail>){ //Make sure who the money was sent to is you
+                        //Lookup invoice via req.body.invoice and complete the order.
+                        //You should also probably check the mc_gross and mc_currency to ensure that you received the right amount of money
+                    }
                 }
             }
         }
