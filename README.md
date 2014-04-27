@@ -7,6 +7,8 @@ This NodeJS module is a library for working with the Paypal Express Checkout API
 
 I (RyanCopley @ GitHub) found this project and it does not seem to be maintained and it does not fully wrap the Paypal Express Checkout API. I plan on doing both of those tasks. Please feel free to fork and send pull requests :)
 
+Most of this example code is based off of the Express framework, but it can be easily modified to nearly any framework :)
+
 ## Using PaypalExpress (RyanCopley Fork)
 
 ### Initialization (Going to add to npm later, sorry.)
