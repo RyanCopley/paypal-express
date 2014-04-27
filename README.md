@@ -66,10 +66,16 @@ I (RyanCopley @ GitHub) found this project and it does not seem to be maintained
 ### IPN (Completing the order automatically)
 
     exports.ipn = function (req, res) {
-        if (req.body.payment_status === 'Completed') {
-            //Lookup invoice via req.body.invoice and complete the order.
-            //I would include information in the IPN url that you can use to safeguard you against a guessing attack.
-            //(i.e. something that you only share with PayPal that can identify the order)
+    
+        paypal.validateIPN(req.body, function (err, verified){
+            if (verified === true){ // This ensures that the IPN message came from PayPal and not a fraudster
+            
+            if (req.body.payment_status === 'Completed') { //Order is completed
+                if (req.body.receiver_email === <config.paypalAccountEmail>){ //Make sure who the money was sent to is you
+                    //Lookup invoice via req.body.invoice and complete the order.
+                    //You should also probably check the mc_gross and mc_currency to ensure that you received the right amount of money
+                }
+            }
         }
     }
 
