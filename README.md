@@ -4,22 +4,9 @@ This NodeJS module is a library for working with the Paypal Express Checkout API
 
 I (RyanCopley @ GitHub) found this project and it does not seem to be maintained and it does not fully wrap the Paypal Express Checkout API. I plan on doing both of those tasks. Please feel free to fork and send pull requests :)
 
-The library consists of two classes:
+## Using PaypalExpress (RyanCopley Fork)
 
-### NVPRequest
-A low-level class for dealing with NVP requests to the Paypal API. Can be used for [any API request](https://cms.paypal.com/uk/cgi-bin/?cmd=_render-content&content_ID=developer/howto_api_reference).
-
-### PaypalExpress
-A higher-level class for common payment operations. Performs all the response parsing and request formatting needed for each operation.
-
-## How to install
-Run this npm command to install (not working yet):
-
-    npm install paypal-express
-
-## Using PaypalExpress
-
-### Initialization
+### Initialization (Going to add to npm later, sorry.)
 
     var PaypalExpress = require('./paypal-express').PaypalExpress;
 
@@ -29,57 +16,61 @@ Run this npm command to install (not working yet):
 
     paypal.useSandbox(true);
 
+### Set your stores name
+
+    paypal.setBrandName("Paypal Express Store, Llc");
+
 ### Instant payment
 
-    paypal.beginInstantPayment({
-      'RETURNURL': '',
-      'CANCELURL': '',
-      'PAYMENTREQUEST_0_AMT': 1, //Payment amount
-      //More request parameters
-    }, function(err, data) {
-      if (err) {
-        console.error(err);
-      }
-
-      if (data) {
-        var token = data.token;
-        var payment_url = data.payment_url;
-
-        //Redirect to payment_url
-      }
+    paypal.beginInstantPayment( < price > , < invoiceID > , {
+        'RETURNURL': '',
+        'CANCELURL': '',
+        'PAYMENTREQUEST_0_AMT': 1, //Payment amount
+        //More request parameters
+    }, function (err, token, redirectUrl) {
+        if (err) {
+            console.error(err);
+        }
+        //Perhaps do something to save token to your DBMS for later... You need it to authorize the payment later
+        res.redirect(redirectUrl); //Or whatever your system uses to redirect
     });
+    
+### On the "Return" page after they accept the order ... ("Final checkout") | Based on Express.JS Implementation
 
-[List of allowed parameters for SetExpressCheckout](https://cms.paypal.com/uk/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_nvp_r_SetExpressCheckout)
+    exports.finish = function (req, res) {
+        //Extract the values that PayPal returns as GET parameters.
+        var token = req.query.token;
+        var payerId = req.query.PayerID;
+        
+        //Fetch order details
+        paypal.getExpressCheckoutDetails(token, function (err, payerId, invoiceNumber, response) {
+            if (!err) {
+                //Display the order to the customer one last time... then have an "Accept" button
+            }
+        });
+    }
 
-## Using NVPRequest
+### The "Accept" button
 
-### Initialization
+    exports.finish = function (req, res) {
+        paypal.doExpressCheckoutPayment(<price>, <token>, <payerId>, "IPN_URL", function (err, response) {
+            console.log("Executing Paypal Order, the money will now be moved to your account");
+            res.redirect("<Your Thank You page>"); //Redirect out
+        });
+    }
 
-    var NVPRequest = require('./paypal-express').NVPRequest;
 
-    var request = new NVPRequest(<API username>, <API password>, <API signature>);
+### IPN (Completing the order automatically)
 
-### Switch to sandbox API
+    exports.ipn = function (req, res) {
+        if (req.body.payment_status === 'Completed') {
+            //Lookup invoice via req.body.invoice and complete the order.
+            //I would include information in the IPN url that you can use to safeguard you against a guessing attack.
+            //(i.e. something that you only share with PayPal that can identify the order)
+        }
+    }
 
-    request.useSandbox(true);
 
-### Make a request
+[List of allowed parameters for paypal.beginInstantPayment](https://cms.paypal.com/uk/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_nvp_r_SetExpressCheckout)
 
-    request.makeRequest({
-      'METHOD': '<API method>',
-      //Any API method, and any parameter (see Paypal documentation)
-    }, function(err, data) {
-      if (err) {
-        console.error(err);
-      }
-
-      var qs = require('querystring');
-      var response = qs.parse(data.toString());
-
-      if (response.ACK == 'Success') {
-        console.log('Success!');
-      }
-    });
-
-[List of all API methods](https://cms.paypal.com/uk/cgi-bin/?cmd=_render-content&content_ID=developer/howto_api_reference).
 
